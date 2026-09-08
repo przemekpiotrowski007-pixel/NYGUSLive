@@ -35,12 +35,4 @@
 
     </application>
 
-</manifest>            android:foregroundServiceType="mediaProjection" />
-
-    </application>
-
-</manifest>            android:foregroundServiceType="mediaProjection|microphone" />
-
-    </application>
-
 </manifest>
