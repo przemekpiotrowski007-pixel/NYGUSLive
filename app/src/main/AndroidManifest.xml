@@ -22,11 +22,8 @@
             android:screenOrientation="portrait">
 
             <intent-filter>
-
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-
             </intent-filter>
 
         </activity>
@@ -35,6 +32,10 @@
             android:name=".StreamService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
+
+    </application>
+
+</manifest>            android:foregroundServiceType="mediaProjection" />
 
     </application>
 
