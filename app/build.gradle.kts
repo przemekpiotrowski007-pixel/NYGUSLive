@@ -19,3 +19,4 @@ android {
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
 }
+implementation("com.github.pedroSG94.RootEncoder:library:2.8.1")
