@@ -2,29 +2,120 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
   <title>NYGUS Live</title>
   <style>
-    body{
-      margin:0;
-      background:#111;
-      color:white;
-      font-family:Arial,sans-serif;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
-      text-align:center;
-    }
-    h1{
-      font-size:42px;
-    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:#0b0d10;color:#fff;font-family:Arial,sans-serif}
+    body{padding:18px}
+    .wrap{max-width:760px;margin:0 auto}
+    .logo{font-size:34px;font-weight:900;letter-spacing:1px;margin:10px 0 4px}
+    .sub{color:#9ba4af;margin-bottom:20px}
+    .card{background:#14181d;border:1px solid #252b33;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+    label{display:block;font-size:13px;color:#aeb7c2;margin:0 0 7px 2px}
+    input,select{width:100%;padding:14px 13px;border-radius:12px;border:1px solid #303741;background:#0f1317;color:#fff;font-size:16px;outline:none;margin-bottom:12px}
+    input:focus,select:focus{border-color:#687586}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn{border:0;border-radius:13px;padding:14px 12px;font-size:15px;font-weight:800;color:#fff;background:#2a3038}
+    .btn.primary{background:#0b8f4d}
+    .btn.stop{background:#b3262d}
+    .btn:active{transform:scale(.99)}
+    .status{padding:12px 13px;border-radius:12px;background:#0f1317;border:1px solid #252b33;color:#c7d0da;font-size:14px;line-height:1.4}
+    .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#7b8794;margin-right:8px}
+    .live .dot{background:#2bd576}.err .dot{background:#ff5a64}
+    .hint{font-size:12px;color:#7e8996;margin-top:8px;line-height:1.4}
+    .preview{display:none;margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid #252b33;background:#000}
+    .preview iframe{width:100%;height:55vh;border:0;background:#000}
+    @media(max-width:520px){body{padding:14px}.logo{font-size:30px}.grid{grid-template-columns:1fr}.preview iframe{height:52vh}}
   </style>
 </head>
 <body>
-  <div>
-    <h1>NYGUS LIVE</h1>
-    <p>Dashboard działa</p>
+  <div class="wrap">
+    <div class="logo">NYGUS LIVE</div>
+    <div class="sub">Panel do APK • HTML / RTMP / audio</div>
+
+    <div class="card">
+      <label for="pageUrl">Link do strony / HTML</label>
+      <input id="pageUrl" type="url" placeholder="https://twoja-strona.pl">
+      <div class="grid">
+        <button class="btn primary" onclick="openPage()">OTWÓRZ LINK</button>
+        <button class="btn" onclick="togglePreview()">PODGLĄD</button>
+      </div>
+      <div id="preview" class="preview"><iframe id="frame" allow="autoplay; fullscreen"></iframe></div>
+      <div class="hint">Niektóre strony blokują podgląd w ramce. Wtedy użyj „OTWÓRZ LINK”.</div>
+    </div>
+
+    <div class="card">
+      <label for="rtmp">RTMP / RTMPS endpoint</label>
+      <input id="rtmp" type="text" placeholder="rtmps://serwer/app/klucz">
+      <label for="audio">Źródło dźwięku</label>
+      <select id="audio">
+        <option value="internal">Audio strony</option>
+        <option value="mic">Mikrofon</option>
+        <option value="mix">Mix: strona + mikrofon</option>
+      </select>
+      <div class="grid">
+        <button class="btn primary" onclick="startLive()">START LIVE</button>
+        <button class="btn stop" onclick="stopLive()">STOP LIVE</button>
+      </div>
+      <div class="grid" style="margin-top:10px">
+        <button class="btn" onclick="setFullscreen(true)">PEŁNY EKRAN</button>
+        <button class="btn" onclick="goHome()">PANEL</button>
+      </div>
+    </div>
+
+    <div id="status" class="status"><span class="dot"></span><span id="statusText">Panel gotowy.</span></div>
   </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    function setStatus(text, type=''){ const s=$('status'); s.className='status '+type; $('statusText').textContent=text; }
+    window.nygusSetStatus = setStatus;
+
+    function openPage(){
+      const url=$('pageUrl').value.trim();
+      if(!/^https?:\/\//i.test(url)){ setStatus('Wklej poprawny link zaczynający się od http:// lub https://','err'); return; }
+      localStorage.setItem('nygus_page',url);
+      if(window.Android && Android.openUrl){ Android.openUrl(url); }
+      else { location.href=url; }
+    }
+
+    function togglePreview(){
+      const url=$('pageUrl').value.trim();
+      if(!/^https?:\/\//i.test(url)){ setStatus('Najpierw wklej link do strony.','err'); return; }
+      const p=$('preview');
+      if(p.style.display==='block'){ p.style.display='none'; return; }
+      $('frame').src=url; p.style.display='block';
+    }
+
+    function startLive(){
+      const endpoint=$('rtmp').value.trim();
+      const audio=$('audio').value;
+      if(!/^rtmps?:\/\//i.test(endpoint)){ setStatus('Wklej poprawny adres RTMP/RTMPS.','err'); return; }
+      localStorage.setItem('nygus_rtmp',endpoint);
+      localStorage.setItem('nygus_audio',audio);
+      if(window.Android && Android.startLive){ Android.startLive(endpoint,audio); }
+      else setStatus('RTMP wymaga mostka Android w APK.','err');
+    }
+
+    function stopLive(){
+      if(window.Android && Android.stopLive) Android.stopLive();
+      else setStatus('LIVE zatrzymany.');
+    }
+
+    function setFullscreen(v){
+      if(window.Android && Android.setFullscreen) Android.setFullscreen(v);
+    }
+
+    function goHome(){
+      if(window.Android && Android.goHome) Android.goHome();
+      else location.reload();
+    }
+
+    $('pageUrl').value=localStorage.getItem('nygus_page')||'';
+    $('rtmp').value=localStorage.getItem('nygus_rtmp')||'';
+    $('audio').value=localStorage.getItem('nygus_audio')||'internal';
+  </script>
 </body>
 </html>
