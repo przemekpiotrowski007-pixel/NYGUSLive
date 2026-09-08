@@ -14,9 +14,18 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.github.pedroSG94.RootEncoder:library:2.8.1")
 }
-implementation("com.github.pedroSG94.RootEncoder:library:2.8.1")
